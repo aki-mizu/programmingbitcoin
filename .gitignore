@@ -5,3 +5,6 @@
 *.orig
 *.rej
 *.patch
+
+# Cargo build artifacts for Rust chapter implementations
+**/target/
