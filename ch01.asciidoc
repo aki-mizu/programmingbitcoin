@@ -118,24 +118,23 @@ Notice the order of the field is always 1 more than the largest element.
 You might have noticed that the field has a prime order every time.
 For a variety of reasons that will become clear later, it turns out that fields _must_ have an order that is a power of a prime, and that the finite fields whose order is prime are the ones we're interested in.
 
-==== Constructing a Finite Field in Python
+==== Constructing a Finite Field in Rust
 
-We((("FieldElement class"))) want to represent each finite field element, so in Python, we'll be creating a class that represents a single finite field element.
-Naturally, we'll name the class pass:[<span class="keep-together"><code>FieldElement</code></span>].
+We((("FieldElement struct"))) want to represent each finite field element, so in Rust, we'll be creating a struct that represents a single finite field element.
+Naturally, we'll name the struct pass:[<span class="keep-together"><code>FieldElement</code></span>].
 
 
-The class represents an element in a field __F__~prime~.
-The bare bones of the class look like this:
+The struct represents an element in a field __F__~prime~.
+The bare bones of the struct look like this:
 
 [source,rust]
 ----
 include::code-ch01/ecc.rs[tag=source1]
 ----
-<1> We first check that `num` is between `0` and `prime-1` inclusive.
-If not, we get an invalid +FieldElement+ and we raise a `ValueError`, which is what we should raise when we get an inappropriate value.
-<2> The((("&#x005F;&#x005F;init&#x005F;&#x005F; method"))) rest of the `__init__` method assigns the initialization values to the object.
-<3> The((("&#x005F;&#x005F;eq&#x005F;&#x005F; method"))) `__eq__` method checks if two objects of class `FieldElement` are equal.
-This is only true when the `num` and `prime` properties are equal.
+<1> We first check that `value` is between `0` and `prime-1` inclusive.
+If not, construction returns a `FieldElementError`.
+<2> The `new` method assigns the initialization values to the struct.
+<3> Deriving `PartialEq` makes two `FieldElement` values equal only when their `value` and `prime` fields are equal.
 
 What we've defined already allows us to do this:
 
@@ -144,12 +143,12 @@ What we've defined already allows us to do this:
 include::code-ch01/examples.rs[tag=example1]
 ----
 
-Python((("== operator"))) allows us to override the `==` operator on `FieldElement` with the `__eq__` method, which is something we'll be taking advantage of going forward.
+Rust((("== operator"))) uses the `PartialEq` trait for the `==` operator on `FieldElement`, which is something we'll be taking advantage of going forward.
 
 You can see this in action in the code that accompanies this book.
-Once you've set up Jupyter Notebook (see <<setting_up>>), you can navigate to _code-ch01/Chapter1.ipynb_ and run the code to see the results.
+Run `cargo test --manifest-path code-ch01/Cargo.toml` from the repository root to execute the chapter tests.
 For the next exercise, you'll want to open up _ecc.rs_ by clicking the link in the Exercise 1 box.
-If you get stuck, please remember that the answers to every exercise are in <<appendix_solutions>>.((("", startref="FFsets01")))((("&#x005F;&#x005F;ne&#x005F;&#x005F; method")))
+If you get stuck, please remember that the answers to every exercise are in <<appendix_solutions>>.((("", startref="FFsets01")))
 
 include::code-ch01/answers.rs[tag=exercise1,indent=0]
 
@@ -274,9 +273,9 @@ This happens to be a very useful property as even very large numbers can be brou
 We'll be using modulo as we define field arithmetic.
 Most operations in finite fields use the modulo operator in some capacity.
 
-==== Modulo Arithmetic in Python
+==== Modulo Arithmetic in Rust
 
-Python uses the `%` operator for modulo arithmetic.
+Rust uses the `%` operator for remainder arithmetic.
 Here is how the modulo operator is used:
 
 [source,rust]
@@ -284,7 +283,7 @@ Here is how the modulo operator is used:
 include::code-ch01/examples.rs[tag=example2]
 ----
 
-We can also use the modulo operator on negative numbers, like((("", startref="FFmodulo01")))((("", startref="modulo01"))) this:
+For negative numbers, use `rem_euclid` to get the mathematical modulo result, like((("", startref="FFmodulo01")))((("", startref="modulo01"))) this:
 
 [source,rust]
 ----
@@ -411,9 +410,9 @@ and so on.
 
 include::code-ch01/answers.rs[tag=exercise2,indent=0]
 
-==== Coding Addition and Subtraction in Python
+==== Coding Addition and Subtraction in Rust
 
-In((("&#x005F;&#x005F;add&#x005F;&#x005F; method")))((("&#x005F;&#x005F;sub&#x005F;&#x005F; method"))) the class `FieldElement` we can now define `__add__` and `__sub__` methods.
+In the struct `FieldElement` we can now define `checked_add` and `checked_sub` methods.
 The idea of these methods is that we want something like this to work:
 
 [source,rust]
@@ -421,9 +420,9 @@ The idea of these methods is that we want something like this to work:
 include::code-ch01/examples.rs[tag=example4]
 ----
 
-In((("&#x002B; (addition) operator")))((("addition (&#x002B;) operator"))) Python we can define what addition (or the + operator) means for our class with the `__add__` method.
+In((("&#x002B; (addition) operator")))((("addition (&#x002B;) operator"))) Rust we can define what addition (or the + operator) means for our struct with the `Add` trait.
 So how do we do this?
-We combine what we learned with modulo arithmetic and create a new method of the class `FieldElement` like so:
+We combine what we learned with modulo arithmetic and create a new method of the struct `FieldElement` like so:
 
 [source,rust]
 ----
@@ -431,11 +430,9 @@ include::code-ch01/ecc.rs[tag=source2]
 ----
 <1> We have to ensure that the elements are from the same finite field, otherwise this calculation doesn't have any meaning.
 <2> Addition in a finite field is defined with the modulo operator, as explained earlier.
-<3> We((("self.&#x005F;&#x005F;class&#x005F;&#x005F; method"))) have to return an instance of the class, which we can conveniently access with `self.__class__`.
-We pass the two initializing arguments, `num` and `self.prime`, for the `__init__` method we saw earlier.
+<3> We return a new `FieldElement` in the same field.
 
-Note that we could use `FieldElement` instead of `self.__class__`, but this would not make the method easily inheritable.
-We will be subclassing `FieldElement` later, so making the method inheritable is important here.((("", startref="FFadd01")))
+The `Add` and `Sub` trait implementations delegate to the checked methods.((("", startref="FFadd01")))
 
 include::code-ch01/answers.rs[tag=exercise3,indent=0]
 
@@ -515,9 +512,9 @@ Intuitively, the fact that we have a prime order results in every element of a f
 If the order of the set was a composite number, multiplying the set by one of the divisors would result in a smaller set.
 ====
 
-==== Coding Multiplication in Python
+==== Coding Multiplication in Rust
 
-Now((("&#x005F;&#x005F;mul&#x005F;&#x005F; method")))((("&#x002A; (multiplication) operator")))((("multiplication (&#x002A;) operator"))) that we understand what multiplication should be in `FieldElement`, we want to define the `__mul__` method that overrides the `*` operator.
+Now((("&#x002A; (multiplication) operator")))((("multiplication (&#x002A;) operator"))) that we understand what multiplication should be in `FieldElement`, we want to define the `checked_mul` method and the `Mul` trait implementation for the `*` operator.
 We want this to work:
 
 [source,rust]
@@ -525,13 +522,13 @@ We want this to work:
 include::code-ch01/examples.rs[tag=example5]
 ----
 
-As with addition and subtraction, the next exercise is to make multiplication work for our class by defining the `__mul__` method.
+As with addition and subtraction, the next exercise is to make multiplication work for our struct by defining the `checked_mul` method.
 
 include::code-ch01/answers.rs[tag=exercise6,indent=0]
 
-==== Coding Exponentiation in Python
+==== Coding Exponentiation in Rust
 
-We((("&#x005F;&#x005F;pow&#x005F;&#x005F; method")))((("&#x002A;&#x002A; operator"))) need to define the exponentiation for `FieldElement`, which in Python can be defined with the `__pow__` method, overriding the `**` operator.
+We need to define exponentiation for `FieldElement` with the `pow` method.
 The difference here is that the exponent is _not_ a `FieldElement`, so it has to be treated a bit differently.
 We want something like this to work:
 
@@ -545,14 +542,17 @@ We can code it this way:
 
 [source,rust]
 ----
-class FieldElement:
-...
-    def __pow__(self, exponent):
-        num = (self.num ** exponent) % self.prime  # <1>
-        return self.__class__(num, self.prime)  # <2>
+pub fn pow(self, exponent: i128) -> Self {
+    let group_order = self.prime - 1;
+    let reduced_exponent = exponent.rem_euclid(group_order as i128) as u64;
+    Self::from_reduced(
+        modular_pow(self.value, reduced_exponent, self.prime),
+        self.prime,
+    )
+}
 ----
-<1> This is a perfectly fine way to do it, but `pow(self.num, exponent, self.prime)` is more efficient.
-<2> We have to return an instance of the class as before.
+<1> We reduce the exponent modulo the field's multiplicative group order.
+<2> `modular_pow` reduces intermediate products as it works.
 
 Why don't we force the exponent to be a `FieldElement` object?
 It turns out that the exponent doesn't have to be a member of the finite field for the math to work.
@@ -705,11 +705,7 @@ In __F__~19~:
 
 This is a relatively expensive calculation as exponentiating grows very fast.
 Division is the most expensive operation for that reason.
-To((("pow function"))) lessen the expense, we can use the `pow` function in Python, which does exponentiation.
-In Python, `pow(7,17)` does the same thing as `7**17`.
-The `pow` function, however, has an optional third argument that makes our calculation more efficient.
-Specifically, `pow` will modulo by the third argument.
-Thus, `pow(7,17,19)` will give the same result as `7**17%19` but do so faster because the modulo function is done after each round of multiplication.((("&#x005F;&#x005F;truediv&#x005F;&#x005F; method")))((("&#x005F;&#x005F;floordiv&#x005F;&#x005F; method")))((("", startref="FFdiv01")))
+To((("modular exponentiation"))) lessen the expense, the Rust implementation uses `modular_pow`, which reduces the intermediate product modulo the field order after each round of multiplication.((("", startref="FFdiv01")))
 
 include::code-ch01/answers.rs[tag=exercise8,indent=0]
 
@@ -717,8 +713,8 @@ include::code-ch01/answers.rs[tag=exercise9,indent=0]
 
 === Redefining Exponentiation
 
-One((("&#x005F;&#x005F;pow&#x005F;&#x005F; method")))((("finite fields", "redefining exponentiation"))) last thing that we need to take care of before we leave this chapter is the `__pow__` method, which needs to handle negative exponents.
-For example, __a__^–3^ needs to be a finite field element, but the current code does not take care of this case.
+One((("finite fields", "redefining exponentiation"))) last thing that we need to take care of before we leave this chapter is the `pow` method, which needs to handle negative exponents.
+For example, __a__^–3^ needs to be a finite field element.
 We want, for example, something like this to work:
 
 [source,rust]
@@ -726,7 +722,7 @@ We want, for example, something like this to work:
 include::code-ch01/examples.rs[tag=example7]
 ----
 
-Unfortunately, the way we've defined `__pow__` simply doesn't handle negative exponents, because the second parameter of the built-in Python function `pow` is required to be positive.
+The Rust implementation handles negative exponents by reducing them with `rem_euclid`.
 
 Thankfully, we can use some math we already know to solve this. We know from pass:[<span class="keep-together">Fermat's</span>] little theorem that:
 
@@ -751,33 +747,29 @@ A naive implementation would do something like this:
 
 [source,rust]
 ----
-class FieldElement:
-...
-    def __pow__(self, exponent):
-	n = exponent
-	while n < 0:
-	    n += self.prime - 1 # <1>
-        num = pow(self.num, n, self.prime) # <2>
-        return self.__class__(num, self.prime)
+let mut reduced_exponent = exponent;
+while reduced_exponent < 0 {
+    reduced_exponent += (self.prime - 1) as i128; // <1>
+}
+let value = modular_pow(self.value, reduced_exponent as u64, self.prime); // <2>
+Self::from_reduced(value, self.prime)
 ----
 <1> We add until we get a positive exponent.
-<2> We use the Python built-in `pow` to make this more efficient.
+<2> We use modular exponentiation to make this more efficient.
 
 Thankfully, we can do even better.
-We already know how to force a number out of being negative, using our familiar friend `%`!
+We already know how to force a number out of being negative, using `rem_euclid`!
 As a bonus, we can also reduce very large exponents at the same time given that __a__^__p__–1^ = 1.
-This will make the `pow` function not work as hard:
+This will make modular exponentiation not work as hard:
 
 [source,rust]
 ----
-class FieldElement:
-...
 include::code-ch01/ecc.rs[tag=source3]
 ----
 <1> Make the exponent into something within the 0 to __p__–2 range, inclusive.
 
 === Conclusion
 
-In this chapter we learned about finite fields and how to implement them in Python.
+In this chapter we learned about finite fields and how to implement them in Rust.
 We'll be using finite fields in <<chapter_elliptic_curve_cryptography>> for elliptic curve cryptography.
 We turn next to the other mathematical component that we need for elliptic curve cryptography: elliptic curves.((("", startref="MTfinite01")))

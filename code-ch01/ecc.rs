@@ -33,7 +33,7 @@ impl FieldElement {
 
         Ok(Self { value, prime })
     }
-// end::source1[]
+    // end::source1[]
 
     /// Returns this element's canonical value, in the range $0..p$.
     pub const fn value(self) -> u64 {
@@ -120,7 +120,11 @@ impl fmt::Display for FieldElementError {
                 write!(formatter, "field prime must be at least 2, got {prime}")
             }
             Self::ValueOutOfRange { value, prime } => {
-                write!(formatter, "value {value} is not in field range 0 to {}", prime - 1)
+                write!(
+                    formatter,
+                    "value {value} is not in field range 0 to {}",
+                    prime - 1
+                )
             }
             Self::MismatchedFields {
                 left_prime,

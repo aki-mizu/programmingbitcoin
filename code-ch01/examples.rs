@@ -21,7 +21,7 @@ pub const fn example_2() -> u64 {
 // end::example2[]
 
 // tag::example3[]
-/// Corresponds to Example 3, using Rust's Euclidean remainder to match Python.
+/// Corresponds to Example 3, using Rust's Euclidean remainder for mathematical modulo.
 pub const fn example_3() -> i64 {
     (-27_i64).rem_euclid(13)
 }

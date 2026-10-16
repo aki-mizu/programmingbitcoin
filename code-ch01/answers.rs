@@ -6,7 +6,7 @@ use crate::ecc::{FieldElement, FieldElementError};
 // tag::exercise1[]
 ==== Exercise 1
 
-Write the corresponding method `__ne__`, which checks if two `FieldElement` objects are _not equal_ to each other.
+Use the derived `PartialEq` implementation to verify that two `FieldElement` values are _not equal_ when their values or field orders differ.
 // end::exercise1[]
 */
 
@@ -38,7 +38,7 @@ pub fn exercise_2() -> [u64; 4] {
 // tag::exercise3[]
 ==== Exercise 3
 
-Write the corresponding `__sub__` method that defines the subtraction of two `FieldElement` objects.
+Write the corresponding `checked_sub` method that defines the subtraction of two `FieldElement` objects.
 // end::exercise3[]
 */
 
@@ -105,7 +105,7 @@ pub fn exercise_5() -> [[u64; 19]; 5] {
 // tag::exercise6[]
 ==== Exercise 6
 
-Write the corresponding `__mul__` method that defines the multiplication of two finite field elements.
+Write the corresponding `checked_mul` method that defines the multiplication of two finite field elements.
 // end::exercise6[]
 */
 
@@ -169,9 +169,7 @@ pub fn exercise_8() -> Result<[u64; 3], FieldElementError> {
 // tag::exercise9[]
 ==== Exercise 9
 
-Write the corresponding `__truediv__` method that defines the division of two field elements.
-
-Note that in Python 3, division is separated into `__truediv__` and `__floordiv__`. The first does normal division and the second does integer division.
+Write the corresponding `checked_div` method that defines the division of two field elements.
 // end::exercise9[]
 */
 
