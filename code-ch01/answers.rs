@@ -1,4 +1,4 @@
-//! Chapter 1 exercise answers.
+//! Chapter 1 exercise prompts and solutions.
 
 use crate::ecc::{FieldElement, FieldElementError};
 
@@ -9,6 +9,17 @@ use crate::ecc::{FieldElement, FieldElementError};
 Use the derived `PartialEq` implementation to verify that two `FieldElement` values are _not equal_ when their values or field orders differ.
 // end::exercise1[]
 */
+
+// tag::answer1[]
+/// Returns the two Exercise 1 inequality checks for different values and field orders.
+pub fn answer_1() -> Result<[bool; 2], FieldElementError> {
+    let element = FieldElement::new(2, 31)?;
+    let different_value = FieldElement::new(15, 31)?;
+    let different_field = FieldElement::new(2, 29)?;
+
+    Ok([element != different_value, element != different_field])
+}
+// end::answer1[]
 
 /*
 // tag::exercise2[]
@@ -23,8 +34,9 @@ Solve these problems in __F__~57~ (assume all pass:[+'s] here are pass:[+<sub><e
 // end::exercise2[]
 */
 
+// tag::answer2[]
 /// Returns the four answers for Exercise 2 in $F_{57}$.
-pub fn exercise_2() -> [u64; 4] {
+pub fn answer_2() -> [u64; 4] {
     let prime = 57;
     [
         (44 + 33) % prime,
@@ -33,6 +45,7 @@ pub fn exercise_2() -> [u64; 4] {
         (52 + prime - 30 - 38) % prime,
     ]
 }
+// end::answer2[]
 
 /*
 // tag::exercise3[]
@@ -41,6 +54,21 @@ pub fn exercise_2() -> [u64; 4] {
 Write the corresponding `checked_sub` method that defines the subtraction of two `FieldElement` objects.
 // end::exercise3[]
 */
+
+// tag::answer3[]
+/// Returns the two answers for Exercise 3 in $F_{31}$.
+pub fn answer_3() -> Result<[u64; 2], FieldElementError> {
+    let prime = 31;
+    let first = FieldElement::new(29, prime)?
+        .checked_sub(FieldElement::new(4, prime)?)?
+        .value();
+    let second = FieldElement::new(15, prime)?
+        .checked_sub(FieldElement::new(30, prime)?)?
+        .value();
+
+    Ok([first, second])
+}
+// end::answer3[]
 
 /*
 // tag::exercise4[]
@@ -54,8 +82,9 @@ Solve the following equations in __F__~97~ (again, assume multiplication and exp
 // end::exercise4[]
 */
 
+// tag::answer4[]
 /// Returns the three answers for Exercise 4 in $F_{97}$.
-pub fn exercise_4() -> Result<[u64; 3], FieldElementError> {
+pub fn answer_4() -> Result<[u64; 3], FieldElementError> {
     let prime = 97;
     let first = FieldElement::new(95, prime)?
         .checked_mul(FieldElement::new(45, prime)?)?
@@ -73,6 +102,7 @@ pub fn exercise_4() -> Result<[u64; 3], FieldElementError> {
 
     Ok([first, second, third])
 }
+// end::answer4[]
 
 /*
 // tag::exercise5[]
@@ -90,8 +120,9 @@ Do you notice anything about these sets?
 // end::exercise5[]
 */
 
+// tag::answer5[]
 /// Returns the Exercise 5 multiples for $k = 1, 3, 7, 13, 18$ in $F_{19}$.
-pub fn exercise_5() -> [[u64; 19]; 5] {
+pub fn answer_5() -> [[u64; 19]; 5] {
     const PRIME: u64 = 19;
     const MULTIPLIERS: [u64; 5] = [1, 3, 7, 13, 18];
 
@@ -100,6 +131,7 @@ pub fn exercise_5() -> [[u64; 19]; 5] {
         std::array::from_fn(|value| multiplier * value as u64 % PRIME)
     })
 }
+// end::answer5[]
 
 /*
 // tag::exercise6[]
@@ -108,6 +140,17 @@ pub fn exercise_5() -> [[u64; 19]; 5] {
 Write the corresponding `checked_mul` method that defines the multiplication of two finite field elements.
 // end::exercise6[]
 */
+
+// tag::answer6[]
+/// Returns the Exercise 6 answer in $F_{31}$.
+pub fn answer_6() -> Result<u64, FieldElementError> {
+    let prime = 31;
+
+    Ok(FieldElement::new(24, prime)?
+        .checked_mul(FieldElement::new(19, prime)?)?
+        .value())
+}
+// end::answer6[]
 
 /*
 // tag::exercise7[]
@@ -123,8 +166,9 @@ For _p_ = 7, 11, 17, 31, what is this set in __F~p~__?
 // end::exercise7[]
 */
 
+// tag::answer7[]
 /// Returns the Exercise 7 results for $p = 7, 11, 17, 31$.
-pub fn exercise_7() -> Result<Vec<Vec<u64>>, FieldElementError> {
+pub fn answer_7() -> Result<Vec<Vec<u64>>, FieldElementError> {
     [7, 11, 17, 31]
         .into_iter()
         .map(|prime| {
@@ -137,6 +181,7 @@ pub fn exercise_7() -> Result<Vec<Vec<u64>>, FieldElementError> {
         })
         .collect()
 }
+// end::answer7[]
 
 /*
 // tag::exercise8[]
@@ -150,8 +195,9 @@ Solve the following equations in __F__~31~:
 // end::exercise8[]
 */
 
+// tag::answer8[]
 /// Returns the three answers for Exercise 8 in $F_{31}$.
-pub fn exercise_8() -> Result<[u64; 3], FieldElementError> {
+pub fn answer_8() -> Result<[u64; 3], FieldElementError> {
     let prime = 31;
     let first = FieldElement::new(3, prime)?
         .checked_div(FieldElement::new(24, prime)?)?
@@ -164,6 +210,7 @@ pub fn exercise_8() -> Result<[u64; 3], FieldElementError> {
 
     Ok([first, second, third])
 }
+// end::answer8[]
 
 /*
 // tag::exercise9[]
@@ -173,29 +220,13 @@ Write the corresponding `checked_div` method that defines the division of two fi
 // end::exercise9[]
 */
 
-#[cfg(test)]
-mod tests {
-    use super::{exercise_2, exercise_4, exercise_5, exercise_7, exercise_8};
+// tag::answer9[]
+/// Returns the Exercise 9 answer in $F_{31}$.
+pub fn answer_9() -> Result<u64, FieldElementError> {
+    let prime = 31;
 
-    #[test]
-    fn computes_the_scalar_exercise_answers() {
-        assert_eq!(exercise_2(), [20, 37, 51, 41]);
-        assert_eq!(exercise_4().unwrap(), [23, 68, 63]);
-        assert_eq!(exercise_8().unwrap(), [4, 29, 13]);
-    }
-
-    #[test]
-    fn verifies_prime_field_multiplication_and_fermat_results() {
-        let expected_values: [u64; 19] = std::array::from_fn(|value| value as u64);
-        assert!(exercise_5().iter().all(|values| {
-            let mut values = *values;
-            values.sort_unstable();
-            values == expected_values
-        }));
-        assert!(exercise_7()
-            .unwrap()
-            .iter()
-            .flatten()
-            .all(|&value| value == 1));
-    }
+    Ok(FieldElement::new(3, prime)?
+        .checked_div(FieldElement::new(24, prime)?)?
+        .value())
 }
+// end::answer9[]

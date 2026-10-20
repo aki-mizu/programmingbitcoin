@@ -37,7 +37,8 @@ cargo clippy --manifest-path code-ch01/Cargo.toml --all-targets -- -D warnings
 `code-ch01` mirrors the Chapter 1 source layout in Rust:
 
 - `ecc.rs` implements finite-field elements and arithmetic.
-- `answers.rs` contains the exercise prompts and solved results.
+- `exercises.rs` contains runnable counterparts to the Chapter 1 notebook exercises.
+- `answers.rs` contains the exercise prompts and source-tagged solutions.
 - `examples.rs` contains runnable chapter examples.
 - `helper.rs` contains small test helpers.
 - `lib.rs` exposes the Chapter 1 modules.

@@ -147,6 +147,7 @@ Rust((("== operator"))) uses the `PartialEq` trait for the `==` operator on `Fie
 
 You can see this in action in the code that accompanies this book.
 Run `cargo test --manifest-path code-ch01/Cargo.toml` from the repository root to execute the chapter tests.
+The runnable counterparts to all nine notebook exercises are exposed as `exercise_1` through `exercise_9` in `exercises.rs`; their solutions are in `answers.rs`.
 For the next exercise, you'll want to open up _ecc.rs_ by clicking the link in the Exercise 1 box.
 If you get stuck, please remember that the answers to every exercise are in <<appendix_solutions>>.((("", startref="FFsets01")))
 
