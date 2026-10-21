@@ -123,32 +123,35 @@ It looks like <<secp256k1_curve>>.
 .secp256k1 curve
 image::images/prbc_0209.png[secp256k1 curve]
 
-=== Coding Elliptic Curves in Python
+=== Coding Elliptic Curves in Rust
 
-For((("elliptic curves", "coding in Python"))) a variety of reasons that will be made clear later, we are not interested in the curve itself, but specific points on the curve.
+For((("elliptic curves", "coding in Rust"))) a variety of reasons that will be made clear later, we are not interested in the curve itself, but specific points on the curve.
 For example, in the curve __y__^2^ = __x__^3^ + 5__x__ + 7, we are interested in the coordinate (–1,1).
-We((("Point class"))) are thus going to define the class `Point` to be a _point_ on a specific curve.
+We((("Point struct"))) are thus going to define the `Point` struct to be a _point_ on a specific curve.
 The curve has the form __y__^2^ = __x__^3^ + _ax_ + _b_, so we can define the curve with just the two numbers _a_ and _b_:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch02/ecc.py[tag=source1]
+include::code-ch02/ecc.rs[tag=source1]
 ----
-<1> We check here that the point is actually on the curve.
-<2> Points are equal if and only if they are on the same curve and have the same coordinates.
+`Point::new` returns a `PointError` when a finite point is not on the curve.
+The point at infinity has both coordinates set to `None`.
+`PartialEq` makes two points equal only when their curves and coordinates are equal.
 
-We can now create `Point` objects, and we will get an error if the point is not on the curve:
+We can now create `Point` values, and construction returns an error if the point is not on the curve:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch02/examples.py[tag=example1]
+include::code-ch02/examples.rs[tag=example1]
 ----
 
-In other words, `__init__` will raise an exception when the point is not on the curve.
+In other words, `Point::new` returns an error when the point is not on the curve.
+Run `cargo test --manifest-path code-ch02/Cargo.toml` from the repository root to execute the chapter tests.
+The runnable counterparts to all seven notebook exercises are exposed as `exercise_1` through `exercise_7` in `exercises.rs`; their solutions are in `answers.rs`.
 
-include::code-ch02/answers.py[tag=exercise1,indent=0]
+include::code-ch02/answers.rs[tag=exercise1,indent=0]
 
-include::code-ch02/answers.py[tag=exercise2,indent=0]
+include::code-ch02/answers.rs[tag=exercise2,indent=0]
 
 === Point Addition
 
@@ -280,41 +283,25 @@ To code point addition, we're going to split it up into three steps:
 === Coding Point Addition
 
 We((("elliptic curves", "point addition coding", id="ECpoindcode02")))((("point addition", "coding", id="PAcode02"))) first handle the identity point, or point at infinity.
-Since we can't easily use infinity in Python, we'll use the `None` value instead.
+Rust represents the point at infinity with `None` for both coordinates.
 What we want is this to work:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch02/examples.py[tag=example2]
+include::code-ch02/examples.rs[tag=example2]
 ----
 
-To make this work, we have to do two things. First, we have to adjust the `__init__` method slightly so it doesn't check that the curve equation is satisfied when we have the point at infinity.
-Second, we have to overload the addition operator or `__add__` as we did with the `FieldElement` class:
+To make this work, `Point::new` accepts absent coordinates for the point at infinity, and `checked_add` handles the point at infinity and point addition.
+The `Add` trait exposes this operation through Rust's `+` operator:
 
-[source,python]
+[source,rust]
 ----
-class Point:
-
-    def __init__(self, x, y, a, b):
-        self.a = a
-        self.b = b
-        self.x = x
-        self.y = y
-include::code-ch02/ecc.py[tag=source2]
-        if self.y**2 != self.x**3 + a * x + b:
-            raise ValueError('({}, {}) is not on the curve'.format(x, y))
-
-include::code-ch02/ecc.py[tag=source3]
+include::code-ch02/ecc.rs[tag=source3]
 ----
-<1> The _x_ coordinate and _y_ coordinate being `None` is how we signify the point at infinity.
-Note that the next +if+ statement will fail if we don't return here.
-<2> We overload the `+` operator here.
-<3> `self.x` being `None` means that `self` is the point at infinity, or the additive identity.
-Thus, we return `other`.
-<4> `other.x` being `None` means that `other` is the point at infinity, or the additive identity.
-Thus, we return `self`.
+When either operand is the point at infinity, the method returns the other operand.
+Points on different curves return a `PointError`.
 
-include::code-ch02/answers.py[tag=exercise3,indent=0]
+include::code-ch02/answers.rs[tag=exercise3,indent=0]
 
 === Point Addition for When x~1~≠x~2~
 
@@ -438,12 +425,12 @@ But we have to reflect over the x-axis, so the right side has to be negated:
 QED.
 ****
 
-include::code-ch02/answers.py[tag=exercise4,indent=0]
+include::code-ch02/answers.rs[tag=exercise4,indent=0]
 
 === Coding Point Addition for When x~1~≠x~2~
 
 We now code this into our library.
-That means we have to adjust the `__add__` method to handle the case where __x__~1~≠__x__~2~.
+That means `checked_add` handles the case where __x__~1~≠__x__~2~.
 We have the formulas:
 
 ++++
@@ -454,9 +441,9 @@ We have the formulas:
 </ul>
 ++++
 
-At the end of the method, we return an instance of the class `Point` using `self.__class__` to make subclassing easier.
+At the end of the method, we return a new `Point`.
 
-include::code-ch02/answers.py[tag=exercise5,indent=0]
+include::code-ch02/answers.rs[tag=exercise5,indent=0]
 
 === Point Addition for When P~1~ = P~2~
 
@@ -544,11 +531,11 @@ That's how we arrive at the slope formula.
 The rest of the results from the point addition formula derivation hold.
 ====
 
-include::code-ch02/answers.py[tag=exercise6,indent=0]
+include::code-ch02/answers.rs[tag=exercise6,indent=0]
 
 === Coding Point Addition for When P~1~ = P~2~
 
-We adjust the `__add__` method to account for this particular case.
+We adjust the `checked_add` method to account for this particular case.
 We have the formulas, and now we implement them:
 
 ++++
@@ -559,7 +546,7 @@ We have the formulas, and now we implement them:
 </ul>
 ++++
 
-include::code-ch02/answers.py[tag=exercise7,indent=0]
+include::code-ch02/answers.rs[tag=exercise7,indent=0]
 
 === Coding One More Exception
 
@@ -572,18 +559,13 @@ image::images/prbc_0219.png[Tangent Vertical]
 
 This can only happen if __P__~1~ = __P__~2~ and the _y_ coordinate is 0, in which case the slope calculation will end up with a 0 in the denominator.
 
-We handle this with a special case:
+We handle this with a special case in `checked_add`:
 
-[source,python]
+[source,rust]
 ----
-class Point:
-    ...
-    def __add__(self, other):
-    	...
-	if self == other and self.y == 0 * self.x:  # <1>
-	    return self.__class__(None, None, self.a, self.b)
+include::code-ch02/ecc.rs[tag=source4]
 ----
-<1> If the two points are equal and the _y_ coordinate is 0, we return the point at pass:[<span class="keep-together">infinity</span>].((("", startref="MTeliptic02")))((("", startref="ECpoindcode02")))((("", startref="PAcode02")))
+If the two points are equal and the _y_ coordinate is 0, we return the point at pass:[<span class="keep-together">infinity</span>].((("", startref="MTeliptic02")))((("", startref="ECpoindcode02")))((("", startref="PAcode02")))
 
 === Conclusion
 

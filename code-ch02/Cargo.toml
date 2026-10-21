@@ -1,0 +1,9 @@
+[package]
+name = "programmingbitcoin-ch02"
+version = "0.1.0"
+edition = "2021"
+description = "Rust code for Programming Bitcoin Chapter 2"
+
+[lib]
+name = "programmingbitcoin_ch02"
+path = "lib.rs"

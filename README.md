@@ -4,7 +4,7 @@ This repository adapts the code from [Programming Bitcoin](https://learning.orei
 
 ## Current Status
 
-Chapter 1, _Finite Fields_, has been converted to Rust. Its narrative is in `ch01.asciidoc`, and its runnable implementation is in `code-ch01`.
+Chapter 1, _Finite Fields_, and Chapter 2, _Elliptic Curves_, have been converted to Rust. Their narratives are in `ch01.asciidoc` and `ch02.asciidoc`, and their runnable implementations are in `code-ch01` and `code-ch02`.
 
 The remaining chapters retain their original source material until they are converted.
 
@@ -17,7 +17,9 @@ rustc --version
 cargo --version
 ```
 
-## Chapter 1
+## Converted Chapters
+
+### Chapter 1
 
 Run the Chapter 1 test suite from the repository root:
 
@@ -25,23 +27,31 @@ Run the Chapter 1 test suite from the repository root:
 cargo test --manifest-path code-ch01/Cargo.toml
 ```
 
-Run the standard quality checks:
+### Chapter 2
+
+Run the Chapter 2 test suite from the repository root:
 
 ```shell
-cargo fmt --manifest-path code-ch01/Cargo.toml --check
-cargo clippy --manifest-path code-ch01/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path code-ch02/Cargo.toml
+```
+
+Run the standard quality checks for either converted chapter:
+
+```shell
+cargo fmt --manifest-path code-chNN/Cargo.toml --check
+cargo clippy --manifest-path code-chNN/Cargo.toml --all-targets -- -D warnings
 ```
 
 ## Layout
 
-`code-ch01` mirrors the Chapter 1 source layout in Rust:
+Each converted `code-chNN` directory is a self-contained Rust crate. The source layout includes:
 
-- `ecc.rs` implements finite-field elements and arithmetic.
-- `exercises.rs` contains runnable counterparts to the Chapter 1 notebook exercises.
+- `ecc.rs` implements the chapter's mathematical types and operations.
+- `exercises.rs` contains runnable counterparts to the chapter notebook exercises.
 - `answers.rs` contains the exercise prompts and source-tagged solutions.
 - `examples.rs` contains runnable chapter examples.
 - `helper.rs` contains small test helpers.
-- `lib.rs` exposes the Chapter 1 modules.
+- `lib.rs` exposes the chapter modules.
 
 ## License
 
