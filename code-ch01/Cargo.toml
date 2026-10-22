@@ -7,3 +7,7 @@ description = "Rust code for Programming Bitcoin Chapter 1"
 [lib]
 name = "programmingbitcoin_ch01"
 path = "lib.rs"
+
+[dependencies]
+num-bigint = "0.4"
+num-traits = "0.2"

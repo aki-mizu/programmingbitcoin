@@ -4,7 +4,9 @@ This repository adapts the code from [Programming Bitcoin](https://learning.orei
 
 ## Current Status
 
-Chapter 1, _Finite Fields_, and Chapter 2, _Elliptic Curves_, have been converted to Rust. Their narratives are in `ch01.asciidoc` and `ch02.asciidoc`, and their runnable implementations are in `code-ch01` and `code-ch02`.
+Chapters 1 through 3 have been converted to Rust. Their narratives are in `ch01.asciidoc`, `ch02.asciidoc`, and `ch03.asciidoc`, and their runnable implementations are in `code-ch01`, `code-ch02`, and `code-ch03`.
+
+Chapter 3 depends on Chapter 1's arbitrary-precision finite-field implementation so the shared arithmetic is implemented once and can represent secp256k1's 256-bit values.
 
 The remaining chapters retain their original source material until they are converted.
 
@@ -35,7 +37,15 @@ Run the Chapter 2 test suite from the repository root:
 cargo test --manifest-path code-ch02/Cargo.toml
 ```
 
-Run the standard quality checks for either converted chapter:
+### Chapter 3
+
+Run the Chapter 3 test suite from the repository root:
+
+```shell
+cargo test --manifest-path code-ch03/Cargo.toml
+```
+
+Run the standard quality checks for any converted chapter:
 
 ```shell
 cargo fmt --manifest-path code-chNN/Cargo.toml --check
@@ -44,9 +54,9 @@ cargo clippy --manifest-path code-chNN/Cargo.toml --all-targets -- -D warnings
 
 ## Layout
 
-Each converted `code-chNN` directory is a self-contained Rust crate. The source layout includes:
+Each converted `code-chNN` directory is a Rust crate. The source layout includes:
 
-- `ecc.rs` implements the chapter's mathematical types and operations.
+- `ecc.rs` implements the chapter's mathematical types and operations. Chapter 3 reuses Chapter 1's `FieldElement` through a local path dependency.
 - `exercises.rs` contains runnable counterparts to the chapter notebook exercises.
 - `answers.rs` contains the exercise prompts and source-tagged solutions.
 - `examples.rs` contains runnable chapter examples.

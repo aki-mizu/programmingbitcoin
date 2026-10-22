@@ -1,6 +1,7 @@
 //! Chapter 1 exercise prompts and solutions.
 
 use crate::ecc::{FieldElement, FieldElementError};
+use num_traits::ToPrimitive;
 
 /*
 // tag::exercise1[]
@@ -60,11 +61,15 @@ Write the corresponding `checked_sub` method that defines the subtraction of two
 pub fn answer_3() -> Result<[u64; 2], FieldElementError> {
     let prime = 31;
     let first = FieldElement::new(29, prime)?
-        .checked_sub(FieldElement::new(4, prime)?)?
-        .value();
+        .checked_sub(&FieldElement::new(4, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
     let second = FieldElement::new(15, prime)?
-        .checked_sub(FieldElement::new(30, prime)?)?
-        .value();
+        .checked_sub(&FieldElement::new(30, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
 
     Ok([first, second])
 }
@@ -87,18 +92,24 @@ Solve the following equations in __F__~97~ (again, assume multiplication and exp
 pub fn answer_4() -> Result<[u64; 3], FieldElementError> {
     let prime = 97;
     let first = FieldElement::new(95, prime)?
-        .checked_mul(FieldElement::new(45, prime)?)?
-        .checked_mul(FieldElement::new(31, prime)?)?
-        .value();
+        .checked_mul(&FieldElement::new(45, prime)?)?
+        .checked_mul(&FieldElement::new(31, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
     let second = FieldElement::new(17, prime)?
-        .checked_mul(FieldElement::new(13, prime)?)?
-        .checked_mul(FieldElement::new(19, prime)?)?
-        .checked_mul(FieldElement::new(44, prime)?)?
-        .value();
+        .checked_mul(&FieldElement::new(13, prime)?)?
+        .checked_mul(&FieldElement::new(19, prime)?)?
+        .checked_mul(&FieldElement::new(44, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
     let third = FieldElement::new(12, prime)?
         .pow(7)
-        .checked_mul(FieldElement::new(77, prime)?.pow(49))?
-        .value();
+        .checked_mul(&FieldElement::new(77, prime)?.pow(49))?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
 
     Ok([first, second, third])
 }
@@ -147,8 +158,10 @@ pub fn answer_6() -> Result<u64, FieldElementError> {
     let prime = 31;
 
     Ok(FieldElement::new(24, prime)?
-        .checked_mul(FieldElement::new(19, prime)?)?
-        .value())
+        .checked_mul(&FieldElement::new(19, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64"))
 }
 // end::answer6[]
 
@@ -174,8 +187,13 @@ pub fn answer_7() -> Result<Vec<Vec<u64>>, FieldElementError> {
         .map(|prime| {
             (1..prime)
                 .map(|value| {
-                    FieldElement::new(value, prime)
-                        .map(|element| element.pow((prime - 1) as i128).value())
+                    FieldElement::new(value, prime).map(|element| {
+                        element
+                            .pow((prime - 1) as i128)
+                            .value()
+                            .to_u64()
+                            .expect("Chapter 1 exercise values fit in u64")
+                    })
                 })
                 .collect::<Result<Vec<_>, _>>()
         })
@@ -200,13 +218,21 @@ Solve the following equations in __F__~31~:
 pub fn answer_8() -> Result<[u64; 3], FieldElementError> {
     let prime = 31;
     let first = FieldElement::new(3, prime)?
-        .checked_div(FieldElement::new(24, prime)?)?
-        .value();
-    let second = FieldElement::new(17, prime)?.pow(-3).value();
+        .checked_div(&FieldElement::new(24, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
+    let second = FieldElement::new(17, prime)?
+        .pow(-3)
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
     let third = FieldElement::new(4, prime)?
         .pow(-4)
-        .checked_mul(FieldElement::new(11, prime)?)?
-        .value();
+        .checked_mul(&FieldElement::new(11, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64");
 
     Ok([first, second, third])
 }
@@ -226,7 +252,9 @@ pub fn answer_9() -> Result<u64, FieldElementError> {
     let prime = 31;
 
     Ok(FieldElement::new(3, prime)?
-        .checked_div(FieldElement::new(24, prime)?)?
-        .value())
+        .checked_div(&FieldElement::new(24, prime)?)?
+        .value()
+        .to_u64()
+        .expect("Chapter 1 exercise values fit in u64"))
 }
 // end::answer9[]

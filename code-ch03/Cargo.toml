@@ -1,0 +1,16 @@
+[package]
+name = "programmingbitcoin-ch03"
+version = "0.1.0"
+edition = "2021"
+description = "Rust code for Programming Bitcoin Chapter 3"
+
+[lib]
+name = "programmingbitcoin_ch03"
+path = "lib.rs"
+
+[dependencies]
+hmac = "0.12"
+num-bigint = "0.4"
+num-traits = "0.2"
+programmingbitcoin-ch01 = { path = "../code-ch01" }
+sha2 = "0.10"

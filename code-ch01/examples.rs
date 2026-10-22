@@ -34,7 +34,7 @@ pub fn example_4() -> Result<bool, FieldElementError> {
     let second = FieldElement::new(12, 13)?;
     let expected = FieldElement::new(6, 13)?;
 
-    Ok(first.checked_add(second)? == expected)
+    Ok(first.checked_add(&second)? == expected)
 }
 // end::example4[]
 
@@ -45,7 +45,7 @@ pub fn example_5() -> Result<bool, FieldElementError> {
     let second = FieldElement::new(12, 13)?;
     let expected = FieldElement::new(10, 13)?;
 
-    Ok(first.checked_mul(second)? == expected)
+    Ok(first.checked_mul(&second)? == expected)
 }
 // end::example5[]
 

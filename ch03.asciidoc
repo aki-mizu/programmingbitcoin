@@ -64,52 +64,44 @@ The graph is not symmetric over the x-axis as in the curve over reals, but about
 What's amazing is that we can use the same point addition equations with the addition, subtraction, multiplication, division, and exponentiation as we defined them for finite fields, and everything still works.
 This may seem surprising, but abstract math has regularities like this despite being different from the traditional modes of calculation you may be familiar with.
 
-include::code-ch03/answers.py[tag=exercise1,indent=0]
+include::code-ch03/answers.rs[tag=exercise1,indent=0]
 
 === Coding Elliptic Curves over Finite Fields
 
-Because we defined an elliptic curve point and defined the `+`, `-` ,`*` and `/` operators for finite fields, we can combine the two classes to create elliptic curve points over a finite field:
+Chapter 1 defines the arbitrary-precision `FieldElement` type, which Chapter 3 imports rather than reimplementing.
+Its `checked_add`, `checked_sub`, `checked_mul`, `checked_div`, and power methods let us combine field values into elliptic curve points:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example1]
+include::code-ch03/examples.rs[tag=example1]
 ----
 
 When initializing `Point`, we will run through this part of the code:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source1]
+include::code-ch03/ecc.rs[tag=source1]
 ----
 
-The addition (`+`), multiplication (`*`), exponentiation (`**`), and not equals (`!=`) operators here use the `__add__`, `__mul__`, `__pow__`, and `__ne__` methods from `FiniteField`, respectively, and _not_ the integer equivalents.
-Being able to do the same equation but with different definitions for the basic arithmetic operators is how we construct an elliptic curve cryptography library.
+The field calculations use explicit checked methods rather than integer arithmetic.
+Those methods retain the field order, reject mismatched fields, and allow the point equation to work over both the small exercise fields and secp256k1's 256-bit field.
 
-We've already coded the two classes that we need to implement elliptic curve points over a finite field.
+We've already coded the shared `FieldElement` type and the `Point` type that we need to implement elliptic curve points over a finite field.
 However, to check our work, it will be useful to create a test suite.
 We will do this using the results of Exercise 1:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source2]
+include::code-ch03/ecc.rs[tag=source2]
 ----
-<1> We pass in `FieldElement` objects to the `Point` class for initialization.
-This will, in turn, use all the overloaded math operations in `FieldElement`.
 
 We can now run this test like so:
 
-[source,pycon]
+[source,shell]
 ----
->>> import ecc
->>> from helper import run  # <1>
->>> run(ecc.ECCTest('test_on_curve'))
-.
-----------------------------------------------------------------------
-Ran 1 test in 0.001s
-
-OK
+cargo test --manifest-path code-ch03/Cargo.toml
 ----
-<1> `helper` is a module with some very useful utility functions, including the ability to run unit tests individually.((("", startref="ECCfinite03")))((("", startref="FFelliptic03")))
+((("", startref="ECCfinite03")))((("", startref="FFelliptic03")))
 
 === Point Addition over Finite Fields
 
@@ -160,16 +152,16 @@ All of the equations for elliptic curves work over finite fields, which sets us 
 
 === Coding Point Addition over Finite Fields
 
-Because we coded +FieldElement+ in such a way as to define `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__pow__`, `__eq__`, and `__ne__`, we can simply initialize `Point` with `FieldElement` objects and point addition will((("", startref="ECCpoint03")))((("", startref="PAfinite03"))) work:
+Because +FieldElement+ exposes checked field arithmetic, we can initialize `Point` with `FieldElement` objects and point addition will((("", startref="ECCpoint03")))((("", startref="PAfinite03"))) work:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example3]
+include::code-ch03/examples.rs[tag=example3]
 ----
 
-include::code-ch03/answers.py[tag=exercise2,indent=0]
+include::code-ch03/answers.rs[tag=exercise2,indent=0]
 
-include::code-ch03/answers.py[tag=exercise3,indent=0]
+include::code-ch03/answers.rs[tag=exercise3,indent=0]
 
 === Scalar Multiplication for Elliptic Curves
 
@@ -263,7 +255,7 @@ That is, there is no known formula that you can plug in to get the answer genera
 This is all a bit confusing, but it's fair to say that we could call the problem the "discrete point division" problem instead of the discrete log problem.
 ****
 
-include::code-ch03/answers.py[tag=exercise4,indent=0]
+include::code-ch03/answers.rs[tag=exercise4,indent=0]
 
 === Scalar Multiplication Redux
 
@@ -273,9 +265,9 @@ Note the previous exercise.
 Most likely, you calculated the point _s_ ⋅ (47,71) in __F__~223~ for _s_ from 1 until 21.
 Here are the results:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example4]
+include::code-ch03/examples.rs[tag=example4]
 ----
 
 If you look closely at the numbers, there's no real discernible pattern to the scalar multiplication.
@@ -406,34 +398,30 @@ image::images/prbc_0217.png[Case 2]
 
 Thus, _aG_ + (_bG_ + _cG_) = (_aG_ + _bG_) + _cG_, proving associativity.((("", startref="ECCmath03")))
 
-include::code-ch03/answers.py[tag=exercise5,indent=0]
+include::code-ch03/answers.rs[tag=exercise5,indent=0]
 
 [role="pagebreak-before"]
 === Coding Scalar Multiplication
 
 What((("scalar multiplication", "coding for")))((("elliptic curve cryptography", "scalar multiplication coding"))) we're trying to do with Exercise 5 is this:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example5]
+include::code-ch03/examples.rs[tag=example5]
 ----
 
 We want to be able to scalar-multiply the point with some number.
-Thankfully, there's((("&#x005F;&#x005F;rmul&#x005F;&#x005F; method"))) a method in Python called `__rmul__` that can be used to override the front multiplication.
+Rust exposes this operation as the `Point::scalar_mul` method.
 A naive implementation looks something like this:
 
-[source,python]
+[source,rust]
 ----
-class Point:
-    ...
-    def __rmul__(self, coefficient):
-        product = self.__class__(None, None, self.a, self.b) # <1>
-        for _ in range(coefficient): # <2>
-            product += self
-        return product
+let mut product = Point::infinity(self.a.clone(), self.b.clone())?;
+for _ in 0..coefficient {
+    product = product.checked_add(self)?;
+}
 ----
-<1> We start the `product` at 0, which in the case of point addition is the point at infinity.
-<2> We loop `coefficient` times and add the point each time.
+We start `product` at 0, which in the case of point addition is the point at infinity, and add the point once for each coefficient.
 
 This is fine for small coefficients, but what if we have a very large coefficient—that is, a number that's so large that we won't be able to get out of this loop in a reasonable amount of time?
 For example, a coefficient of 1 trillion is going to take a really long time.
@@ -441,25 +429,18 @@ For example, a coefficient of 1 trillion is going to take a really long time.
 There's((("binary expansion"))) a cool technique called _binary expansion_ that allows us to perform multiplication in log~2~(_n_) loops, which dramatically reduces the calculation time for large numbers.
 For example, 1 trillion is 40 bits in binary, so we only have to loop 40 times for a number that's generally considered very large:
 
-[source,python]
+[source,rust]
 ----
-class Point:
-    ...
-include::code-ch03/ecc.py[tag=source3]
+include::code-ch03/ecc.rs[tag=source3]
 ----
-<1> `current` represents the point that's at the current bit.
-The first time through the loop it represents 1 &#xd7; +self+; the second time it will be 2 &#xd7; +self+, the third time 4 &#xd7; +self+, then 8 &#xd7; +self+, and so on.
-We double the point each time.
-In binary the coefficients are 1, 10, 100, 1000, 10000, etc.
-<2> We start the result at 0, or the point at infinity.
-<3> We are looking at whether the rightmost bit is a 1.
-If it is, then we add the value of the current bit.
-<4> We need to double the point until we're past how big the coefficient can be.
-<5> We bit-shift the coefficient to the right.
+`current` represents the point at the current bit.
+The first time through the loop it represents 1 &#xd7; the original point; the second time it represents 2 &#xd7; the point, then 4 &#xd7;, 8 &#xd7;, and so on.
+`result` starts at the point at infinity.
+For each set rightmost bit, the method adds `current`, shifts the coefficient right, and doubles `current` for the next bit.
 
 This is an advanced technique. If you don't understand bitwise operators, think of representing the coefficient in binary and only adding the point where there are 1's.
 
-With `__add__` and `__rmul__`, we can start defining some more complicated elliptic curves.
+With `checked_add` and `scalar_mul`, we can start defining some more complicated elliptic curves.
 
 [[definingCurveBC]]
 === Defining the Curve for Bitcoin
@@ -529,72 +510,70 @@ Think of finding a private key this way: there are as many possible private keys
 
 ==== Working with secp256k1
 
-Since we know all of the parameters for secp256k1, we can verify in Python whether the generator point, _G_, is on the curve __y__^2^ = __x__^3^ + 7:
+Since we know all of the parameters for secp256k1, we can verify in Rust whether the generator point, _G_, is on the curve __y__^2^ = __x__^3^ + 7:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example6]
-----
-
-Furthermore, we can verify in Python whether the generator point, _G_, has the order _n_:
-
-[source,python]
-----
-include::code-ch03/examples.py[tag=example7]
+include::code-ch03/examples.rs[tag=example6]
 ----
 
-Since we know the curve we will work in, this is a good time to create a subclass in Python to work exclusively with the parameters for secp256k1.
-We'll define the equivalent `FieldElement` and `Point` objects, but specific to the secp256k1 curve.
+Furthermore, we can verify in Rust whether the generator point, _G_, has the order _n_:
+
+[source,rust]
+----
+include::code-ch03/examples.rs[tag=example7]
+----
+
+Since we know the curve we will work in, this is a good time to create Rust types that work exclusively with the parameters for secp256k1.
+We'll define an `S256Field` wrapper and an `S256Point`, both specific to the secp256k1 curve.
 Let's start by defining the field we'll be working in:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source4]
+include::code-ch03/ecc.rs[tag=source4]
 ...
-include::code-ch03/ecc.py[tag=source5]
+include::code-ch03/ecc.rs[tag=source5]
 ----
 
-We're subclassing the `FieldElement` class so we don't have to pass in _P_ all the time.
+`S256Field` wraps Chapter 1's shared `FieldElement`, so we don't have to pass in _P_ all the time.
 We also want to display a 256-bit number consistently by filling 64 characters so we can see any leading zeros.
 
-Similarly, we((("S256Point class", "creating"))) can define a point on the secp256k1 curve and call it `S256Point`:
+Similarly, we((("S256Point struct", "creating"))) can define a point on the secp256k1 curve and call it `S256Point`:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source6]
+include::code-ch03/ecc.rs[tag=source6]
 ...
-include::code-ch03/ecc.py[tag=source7]
+include::code-ch03/ecc.rs[tag=source7]
 ----
-<1> In case we initialize with the point at infinity, we need to let _x_ and _y_ through directly instead of using the `S256Field` class.
+`S256Point::new` turns finite coordinates into field elements and preserves the `(None, None)` representation of the point at infinity.
 
 We now have an easier way to initialize a point on the secp256k1 curve, without having to define +a+ and +b+ every time like we have to with the `Point` class.
 
-We can also define `__rmul__` a bit more efficiently, since we know the order of the group, _n_.
-Since we're coding Python, we'll name this with a capital `N` to make it clear that `N` is a constant:
+We can also define `S256Point::scalar_mul` a bit more efficiently, since we know the order of the group, _n_.
+The `secp256k1_order` function returns this constant:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source9]
+include::code-ch03/ecc.rs[tag=source9]
 ...
-class S256Point(Point):
-    ...
-include::code-ch03/ecc.py[tag=source8]
+include::code-ch03/ecc.rs[tag=source8]
 ----
-<1> We can mod by _n_ because _nG_ = 0.
+The method can mod by _n_ because _nG_ = 0.
 That is, every _n_ times we cycle back to zero or the point at infinity.
 
-We can now define _G_ directly and keep it around since we'll be using it a lot going forward:
+We can now expose _G_ through `generator()` and create it when needed:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source10]
+include::code-ch03/ecc.rs[tag=source10]
 ----
 
 Now((("", startref="ECsecp03")))((("", startref="secp03")))((("", startref="ECCsecp03"))) checking that the order of _G_ is _n_ is trivial:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example8]
+include::code-ch03/examples.rs[tag=example8]
 ----
 
 === Public Key Cryptography
@@ -853,45 +832,33 @@ Two rounds of sha256 don't necessarily prevent all possible attacks, but doing t
 
 We((("signing and verification", "signature verification", id="SAVsign03"))) can now verify a signature using some of the primitives that we have:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example9]
+include::code-ch03/examples.rs[tag=example9]
 ----
-<1> Note that we use Fermat's little theorem for 1/_s_, since _n_ is prime.
-<2> _u_ = _z_/_s_.
-<3> _v_ = _r_/_s_.
-<4> _uG_ + _vP_ = (_r_,_y_).
-We need to check that the _x_ coordinate is _r_.
+The example computes the inverse of _s_ with Fermat's little theorem, derives _u_ = _z_/_s_ and _v_ = _r_/_s_, and verifies that _uG_ + _vP_ has _x_ coordinate _r_.
 
-include::code-ch03/answers.py[tag=exercise6,indent=0]
+include::code-ch03/answers.rs[tag=exercise6,indent=0]
 
 ==== Programming Signature Verification
 
-We already have a class `S256Point`, which is the public point for the private key.
-We((("Signature class", "creating"))) create a `Signature` class that houses the _r_ and _s_ values:
+We already have an `S256Point` struct, which is the public point for the private key.
+We((("Signature struct", "creating"))) create a `Signature` struct that houses the _r_ and _s_ values:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source11]
+include::code-ch03/ecc.rs[tag=source11]
 ----
 
-We will be doing more with this class in <<chapter_serialization>>.
+We will be doing more with this struct in <<chapter_serialization>>.
 
 We can now write the `verify` method on `S256Point` based on this:
 
-[source,python]
+[source,rust]
 ----
-class S256Point(Point):
-    ...
-include::code-ch03/ecc.py[tag=source12]
+include::code-ch03/ecc.rs[tag=source12]
 ----
-<1> `s_inv` (1/_s_) is calculated using Fermat's little theorem on the order of the group, _n_, which is prime.
-<2> _u_ = _z_/_s_.
-Note that we can mod by _n_ as that's the order of the group.
-<3> _v_ = _r_/_s_.
-Note that we can mod by _n_ as that's the order of the group.
-<4> _uG_ + _vP_ should be _R_.
-<5> We check that the _x_ coordinate is _r_.
+`verify` validates the signature scalars, calculates the inverse of _s_ modulo _n_, and compares the resulting point's _x_ coordinate to _r_.
 
 So, given a public key that is a point on the secp256k1 curve and a signature hash, _z_, we can verify whether a signature is valid or not.((("", startref="SAVsign03")))
 
@@ -919,62 +886,38 @@ We((("signing and verification", "signature creation", id="SAVsig03"))) can now 
 .Be Careful with Random Number Generation
 [WARNING]
 ====
-Note((("random number generation"))) that using something like the `random` library from Python to do cryptography is generally not a good idea.
+Note((("random number generation"))) that using a general-purpose random-number generator in Rust to do cryptography is generally not a good idea.
 This library is for teaching purposes only, so please don't use any of the code explained to you here for production purposes.
 ====
 
 We do this using some of the primitives that we have:
 
-[source,pycon]
+[source,rust]
 ----
-include::code-ch03/examples.py[tag=example10]
+include::code-ch03/examples.rs[tag=example10]
 ----
-<1> This is an example of a "brain wallet," which is a way to keep the private key in your head without having to memorize something too difficult.
-Please don't use this for a real secret.
-<2> This is the signature hash, or hash of the message that we're signing.
-<3> We're going to use a fixed _k_ here for demonstration purposes.
-<4> _kG_ = (_r_,_y_), so we take the _x_ coordinate only.
-<5> _s_ = (_z_ + _re_)/_k_.
-We can mod by _n_ because we know this is a cyclical group of order _n_.
-<6> The public point needs to be known by the verifier.
+The example derives a private key from a demonstration secret, hashes the message to create _z_, and uses deterministic signing.
+Please don't use a brain-wallet-style secret for a real key.
 
-include::code-ch03/answers.py[tag=exercise7,indent=0]
+include::code-ch03/answers.rs[tag=exercise7,indent=0]
 
 ==== Programming Message Signing
 
-To((("PrivateKey class", "creating"))) program message signing, we now create a `PrivateKey` class, which will house our secret:
+To((("PrivateKey struct", "creating"))) program message signing, we now create a `PrivateKey` struct, which will house our secret:
 
-[source,python]
+[source,rust]
 ----
-include::code-ch03/ecc.py[tag=source13]
+include::code-ch03/ecc.rs[tag=source13]
 ----
-<1> We keep around the public key, `self.point`, for convenience.
+The struct keeps the derived public `point` for convenience.
 
 We then create the `sign` method:
 
-[source,python]
+[source,rust]
 ----
-from random import randint
-...
-class PrivateKey:
-...
-    def sign(self, z):
-        k = randint(0, N)  # <1>
-        r = (k*G).x.num  # <2>
-        k_inv = pow(k, N-2, N)  # <3>
-        s = (z + r*self.secret) * k_inv % N  # <4>
-        if s > N/2:  # <5>
-            s = N - s
-        return Signature(r, s) # <6>
+include::code-ch03/ecc.rs[tag=source14]
 ----
-<1> `randint` chooses a random integer from ++[0,__n__)++.
-Please don't use this function in production, because the random number from this library is not nearly random enough.
-<2> _r_ is the _x_ coordinate of _kG_.
-<3> We use Fermat's little theorem again, and _n_, which is prime.
-<4> _s_ = (_z_ + _re_)/_k_.
-<5> It turns out that using the low-_s_ value will get nodes to relay our transactions.
-This is for malleability reasons.
-<6> We return a `Signature` object from the class defined earlier.
+`sign` derives an RFC 6979 nonce, calculates _r_ from _kG_, computes _s_ with the modular inverse of _k_, and normalizes to low-_s_ for transaction relay policy.
 
 [role="pagebreak-before less_space"]
 .Importance of a Unique `k`
@@ -1002,17 +945,8 @@ If anyone sees both signatures, they can use this formula and find our secret!
 The https://arstechnica.com/gaming/2010/12/ps3-hacked-through-poor-implementation-of-cryptography/[PlayStation 3 hack] back in 2010 was due to the reuse of the _k_ value in multiple signatures.
 
 To combat this, there is a deterministic _k_ generation standard that uses the secret and _z_ to create a unique, deterministic _k_ every time.
-The specification is in https://tools.ietf.org/html/rfc6979[RFC 6979] and the code changes to look like this:
-
-[source,python]
-----
-class PrivateKey:
-...
-include::code-ch03/ecc.py[tag=source14]
-----
-<1> We are using the deterministic _k_ instead of a random one.
-Everything else about `sign` remains the same.
-<2> This algorithm returns a candidate that's suitable.
+The specification is in https://tools.ietf.org/html/rfc6979[RFC 6979].
+The `PrivateKey::sign` implementation above uses its deterministic nonce procedure and returns a candidate in the valid scalar range.
 
 A deterministic _k_ will be unique with very high probability.
 This is because sha256 is collision-resistant, and no collisions have been found to date.

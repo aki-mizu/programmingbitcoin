@@ -125,15 +125,15 @@ Naturally, we'll name the struct pass:[<span class="keep-together"><code>FieldEl
 
 
 The struct represents an element in a field __F__~prime~.
+It stores values with arbitrary precision, so the same implementation supports the small examples in this chapter and the 256-bit secp256k1 field introduced in Chapter 3.
 The bare bones of the struct look like this:
 
 [source,rust]
 ----
 include::code-ch01/ecc.rs[tag=source1]
 ----
-<1> We first check that `value` is between `0` and `prime-1` inclusive.
-If not, construction returns a `FieldElementError`.
-<2> The `new` method assigns the initialization values to the struct.
+Construction checks that `value` is between `0` and `prime-1` inclusive and returns a `FieldElementError` otherwise.
+`new` accepts the small integer values used in this chapter, while `from_biguint` accepts arbitrary-precision values.
 <3> Deriving `PartialEq` makes two `FieldElement` values equal only when their `value` and `prime` fields are equal.
 
 What we've defined already allows us to do this:
@@ -543,17 +543,9 @@ We can code it this way:
 
 [source,rust]
 ----
-pub fn pow(self, exponent: i128) -> Self {
-    let group_order = self.prime - 1;
-    let reduced_exponent = exponent.rem_euclid(group_order as i128) as u64;
-    Self::from_reduced(
-        modular_pow(self.value, reduced_exponent, self.prime),
-        self.prime,
-    )
-}
+include::code-ch01/ecc.rs[tag=source3]
 ----
-<1> We reduce the exponent modulo the field's multiplicative group order.
-<2> `modular_pow` reduces intermediate products as it works.
+The implementation reduces the exponent modulo the field's multiplicative group order and uses arbitrary-precision modular exponentiation.
 
 Why don't we force the exponent to be a `FieldElement` object?
 It turns out that the exponent doesn't have to be a member of the finite field for the math to work.
@@ -706,7 +698,7 @@ In __F__~19~:
 
 This is a relatively expensive calculation as exponentiating grows very fast.
 Division is the most expensive operation for that reason.
-To((("modular exponentiation"))) lessen the expense, the Rust implementation uses `modular_pow`, which reduces the intermediate product modulo the field order after each round of multiplication.((("", startref="FFdiv01")))
+To((("modular exponentiation"))) lessen the expense, the Rust implementation uses `BigUint::modpow`, which reduces intermediate products modulo the field order as it works.((("", startref="FFdiv01")))
 
 include::code-ch01/answers.rs[tag=exercise8,indent=0]
 
@@ -723,7 +715,7 @@ We want, for example, something like this to work:
 include::code-ch01/examples.rs[tag=example7]
 ----
 
-The Rust implementation handles negative exponents by reducing them with `rem_euclid`.
+The Rust implementation handles negative exponents by reducing a signed arbitrary-precision exponent modulo the field's multiplicative group order.
 
 Thankfully, we can use some math we already know to solve this. We know from pass:[<span class="keep-together">Fermat's</span>] little theorem that:
 
@@ -744,30 +736,15 @@ So, for __a__^–3^, we can do:
 ++++
 
 This is a way we can do negative exponents.
-A naive implementation would do something like this:
-
-[source,rust]
-----
-let mut reduced_exponent = exponent;
-while reduced_exponent < 0 {
-    reduced_exponent += (self.prime - 1) as i128; // <1>
-}
-let value = modular_pow(self.value, reduced_exponent as u64, self.prime); // <2>
-Self::from_reduced(value, self.prime)
-----
-<1> We add until we get a positive exponent.
-<2> We use modular exponentiation to make this more efficient.
-
-Thankfully, we can do even better.
-We already know how to force a number out of being negative, using `rem_euclid`!
-As a bonus, we can also reduce very large exponents at the same time given that __a__^__p__–1^ = 1.
-This will make modular exponentiation not work as hard:
+A naive implementation would add the group order until the exponent becomes positive.
+Instead, the implementation reduces the signed exponent modulo the group order in one step.
+This also reduces very large exponents at the same time given that __a__^__p__–1^ = 1:
 
 [source,rust]
 ----
 include::code-ch01/ecc.rs[tag=source3]
 ----
-<1> Make the exponent into something within the 0 to __p__–2 range, inclusive.
+The reduced exponent is in the 0 to __p__–2 range, inclusive.
 
 === Conclusion
 
