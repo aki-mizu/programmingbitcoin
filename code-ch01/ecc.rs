@@ -65,6 +65,7 @@ impl FieldElement {
         self.value.is_zero()
     }
 
+    // tag::source2[]
     /// Adds two elements from the same field.
     pub fn checked_add(&self, other: &Self) -> Result<Self, FieldElementError> {
         self.ensure_same_field(other)?;
