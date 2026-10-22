@@ -147,7 +147,7 @@ include::code-ch02/examples.rs[tag=example1]
 
 In other words, `Point::new` returns an error when the point is not on the curve.
 Run `cargo test --manifest-path code-ch02/Cargo.toml` from the repository root to execute the chapter tests.
-The runnable counterparts to all seven notebook exercises are exposed as `exercise_1` through `exercise_7` in `exercises.rs`; their solutions are in `answers.rs`.
+The runnable implementations for all seven exercises are exposed as `exercise_1` through `exercise_7` in `exercises.rs`; their solutions are in `answers.rs`.
 
 include::code-ch02/answers.rs[tag=exercise1,indent=0]
 
