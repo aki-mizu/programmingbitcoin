@@ -68,10 +68,10 @@ impl FieldElement {
     // tag::source2[]
     /// Adds two elements from the same field.
     pub fn checked_add(&self, other: &Self) -> Result<Self, FieldElementError> {
-        self.ensure_same_field(other)?;
+        self.ensure_same_field(other)?; // <1>
         Ok(Self::from_reduced(
-            (&self.value + &other.value) % &self.prime,
-            self.prime.clone(),
+            (&self.value + &other.value) % &self.prime, // <2>
+            self.prime.clone(),                         // <3>
         ))
     }
     // end::source2[]
