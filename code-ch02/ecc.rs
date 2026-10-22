@@ -68,32 +68,23 @@ pub struct Point {
 impl Point {
     /// Creates a finite point or the point at infinity when both coordinates are absent.
     pub fn new(x: Option<f64>, y: Option<f64>, a: f64, b: f64) -> Result<Self, PointError> {
-        validate_finite("a", a)?;
-        validate_finite("b", b)?;
-        if let Some(x) = x {
-            validate_finite("x", x)?;
+        validate_point_inputs(x, y, a, b)?;
+        match (x, y) {
+            (None, None) => Ok(Self {
+                x: None,
+                y: None,
+                a,
+                b,
+            }),
+            (Some(x), Some(y)) if is_on_curve(x, y, a, b) => Ok(Self {
+                x: Some(x),
+                y: Some(y),
+                a,
+                b,
+            }),
+            (Some(x), Some(y)) => Err(PointError::PointNotOnCurve { x, y, a, b }),
+            _ => Err(PointError::CoordinatesMustBothBePresentOrAbsent),
         }
-        if let Some(y) = y {
-            validate_finite("y", y)?;
-        }
-
-        if x.is_none() && y.is_none() {
-            return Ok(Self { x, y, a, b });
-        }
-
-        let (Some(x), Some(y)) = (x, y) else {
-            return Err(PointError::CoordinatesMustBothBePresentOrAbsent);
-        };
-        if !is_on_curve(x, y, a, b) {
-            return Err(PointError::PointNotOnCurve { x, y, a, b });
-        }
-
-        Ok(Self {
-            x: Some(x),
-            y: Some(y),
-            a,
-            b,
-        })
     }
     // end::source1[]
 
@@ -226,6 +217,18 @@ fn validate_finite(name: &'static str, value: f64) -> Result<(), PointError> {
     } else {
         Err(PointError::NonFiniteValue { name, value })
     }
+}
+
+fn validate_point_inputs(x: Option<f64>, y: Option<f64>, a: f64, b: f64) -> Result<(), PointError> {
+    for (name, value) in [("a", a), ("b", b)] {
+        validate_finite(name, value)?;
+    }
+    for (name, value) in [("x", x), ("y", y)] {
+        if let Some(value) = value {
+            validate_finite(name, value)?;
+        }
+    }
+    Ok(())
 }
 
 fn is_on_curve(x: f64, y: f64, a: f64, b: f64) -> bool {

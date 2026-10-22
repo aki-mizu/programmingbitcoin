@@ -88,25 +88,7 @@ impl Point {
                 b,
             }),
             (Some(x), Some(y)) => {
-                a.ensure_same_field(&x)?;
-                a.ensure_same_field(&y)?;
-
-                let two = BigUint::from(2_u8);
-                let three = BigUint::from(3_u8);
-                let left = y.pow_biguint(&two);
-                let right = x
-                    .pow_biguint(&three)
-                    .checked_add(&a.checked_mul(&x)?)?
-                    .checked_add(&b)?;
-                if left != right {
-                    return Err(PointError::PointNotOnCurve {
-                        x: Box::new(x),
-                        y: Box::new(y),
-                        a: Box::new(a),
-                        b: Box::new(b),
-                    });
-                }
-
+                Self::validate_finite_coordinates(&x, &y, &a, &b)?;
                 Ok(Self {
                     x: Some(x),
                     y: Some(y),
@@ -118,6 +100,32 @@ impl Point {
         }
     }
     // end::source1[]
+
+    fn validate_finite_coordinates(
+        x: &FieldElement,
+        y: &FieldElement,
+        a: &FieldElement,
+        b: &FieldElement,
+    ) -> Result<(), PointError> {
+        a.ensure_same_field(x)?;
+        a.ensure_same_field(y)?;
+
+        let left = y.pow_biguint(&BigUint::from(2_u8));
+        let right = x
+            .pow_biguint(&BigUint::from(3_u8))
+            .checked_add(&a.checked_mul(x)?)?
+            .checked_add(b)?;
+        if left == right {
+            Ok(())
+        } else {
+            Err(PointError::PointNotOnCurve {
+                x: Box::new(x.clone()),
+                y: Box::new(y.clone()),
+                a: Box::new(a.clone()),
+                b: Box::new(b.clone()),
+            })
+        }
+    }
 
     /// Creates the additive identity for the curve $y^2 = x^3 + ax + b$.
     pub fn infinity(a: FieldElement, b: FieldElement) -> Result<Self, PointError> {
